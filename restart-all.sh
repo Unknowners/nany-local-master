@@ -14,9 +14,9 @@ pkill -f "node.*vite" 2>/dev/null || true
 pkill -f "python.*uvicorn" 2>/dev/null || true
 sleep 3
 
-# Примусово очищуємо порти
-lsof -ti :8080 | xargs -r kill -9 2>/dev/null || true
-lsof -ti :8000 | xargs -r kill -9 2>/dev/null || true
+# Примусово очищуємо порти (macOS сумісний)
+lsof -ti :8080 | xargs kill -9 2>/dev/null || true
+lsof -ti :8000 | xargs kill -9 2>/dev/null || true
 sleep 2
 
 echo "✅ Всі старі процеси зупинені"
@@ -34,7 +34,7 @@ sleep 10
 
 # Запускаємо Backend локально з правильними змінними
 echo "🐍 Запуск Backend локально..."
-cd /Users/anton/Desktop/nany/nanny-match-backend
+cd "$(dirname "$0")/nanny-match-backend"
 source venv/bin/activate
 export DATABASE_URL="postgresql://app:app@localhost:5432/nanny_match"
 export ENVIRONMENT="development"
@@ -79,7 +79,7 @@ cleanup() {
     echo "🧹 Зупинка сервісів..."
     kill $BACKEND_PID 2>/dev/null || true
     kill $FRONTEND_PID 2>/dev/null || true
-    cd /Users/anton/Desktop/nany/nanny-match-backend
+    cd "$(dirname "$0")/nanny-match-backend"
     docker-compose -f docker-compose.dev.yml down
     echo "✅ Всі сервіси зупинені"
     exit 0
