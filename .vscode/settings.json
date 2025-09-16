@@ -1,0 +1,102 @@
+{
+    // Python Settings
+    "python.defaultInterpreterPath": "./nanny-match-backend/venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.formatting.provider": "black",
+    "python.sortImports.args": [
+        "--profile",
+        "black"
+    ],
+    // FastAPI specific
+    "python.analysis.extraPaths": [
+        "./nanny-match-backend"
+    ],
+    // TypeScript/React Settings
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "typescript.suggest.autoImports": true,
+    "emmet.includeLanguages": {
+        "typescript": "html",
+        "typescriptreact": "html"
+    },
+    // Tailwind CSS
+    "tailwindCSS.includeLanguages": {
+        "typescript": "html",
+        "typescriptreact": "html"
+    },
+    "tailwindCSS.experimental.classRegex": [
+        [
+            "cva\\(([^)]*)\\)",
+            "[\"'`]([^\"'`]*).*?[\"'`]"
+        ],
+        [
+            "cx\\(([^)]*)\\)",
+            "(?:'|\"|`)([^']*)(?:'|\"|`)"
+        ]
+    ],
+    // File Associations
+    "files.associations": {
+        "*.env*": "dotenv",
+        "Dockerfile*": "dockerfile",
+        "docker-compose*.yml": "dockercompose"
+    },
+    // Editor Settings
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit",
+        "source.fixAll.eslint": "explicit"
+    },
+    "editor.rulers": [
+        80,
+        120
+    ],
+    // File Explorer
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/node_modules": true,
+        "**/.git": true,
+        "**/venv": true,
+        "**/.venv": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/*.pyc": true,
+        "**/.DS_Store": true
+    },
+    // Search Settings
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/venv": true,
+        "**/.venv": true,
+        "**/dist": true,
+        "**/build": true
+    },
+    // Docker Settings
+    "docker.showStartPage": false,
+    // Terminal Settings
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "terminal.integrated.env.osx": {
+        "PATH": "${workspaceFolder}/nanny-match-backend/venv/bin:${env:PATH}"
+    },
+    // Git Settings
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    // Markdown Settings
+    "markdown.preview.fontSize": 14,
+    "markdown.preview.lineHeight": 1.6,
+    // Spell Checker
+    "cSpell.words": [
+        "fastapi",
+        "uvicorn",
+        "pydantic",
+        "alembic",
+        "postgresql",
+        "supabase",
+        "tailwindcss",
+        "vite",
+        "nanny",
+        "ukraine",
+        "onboarding",
+        "turbosms"
+    ]
+}

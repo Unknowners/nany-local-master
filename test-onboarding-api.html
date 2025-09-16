@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Тест API довідників онбордингу</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .result {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+
+        .error {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #d32f2f;
+        }
+
+        .success {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🧪 Тест API довідників онбордингу нянь</h1>
+
+    <div class="section">
+        <h3>1️⃣ Тест конфігурації backend</h3>
+        <button onclick="testBackendConfig()">Тест backend конфігурації</button>
+        <div id="backend-config-result" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h3>2️⃣ Тест завантаження категорій</h3>
+        <button onclick="testCategories()">GET /api/v1/reference/categories</button>
+        <div id="categories-result" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h3>3️⃣ Тест завантаження значень освіти</h3>
+        <button onclick="testOsvitaValues()">GET /api/v1/reference/values/osvita</button>
+        <div id="osvita-result" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h3>4️⃣ Тест завантаження значень досвіду</h3>
+        <button onclick="testDosvitValues()">GET /api/v1/reference/values/dosvid-roboty</button>
+        <div id="dosvid-result" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h3>5️⃣ Тест як frontend робить запити (через FastAPI client)</h3>
+        <button onclick="testFrontendWay()">Симуляція frontend запитів</button>
+        <div id="frontend-result" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h3>6️⃣ Тест полів онбордингу</h3>
+        <button onclick="testOnboardingFields()">GET /api/v1/onboarding_fields</button>
+        <div id="fields-result" class="result"></div>
+    </div>
+
+    <script>
+        // Симуляція FastAPI клієнта
+        function createFastAPIClient(baseUrl) {
+            const request = async (method, endpoint, body) => {
+                try {
+                    const options = {
+                        method,
+                        headers: { 'Content-Type': 'application/json' }
+                    };
+                    if (body && method !== 'GET') {
+                        options.body = JSON.stringify(body);
+                    }
+
+                    const response = await fetch(`${baseUrl}${endpoint}`, options);
+
+                    if (!response.ok) {
+                        return { data: null, error: { message: `HTTP ${response.status}: ${response.statusText}` } };
+                    }
+
+                    const data = await response.json();
+                    return { data, error: null };
+                } catch (error) {
+                    return { data: null, error: { message: error.message } };
+                }
+            };
+
+            return { request };
+        }
+
+        // Determine backend type like frontend does
+        function getBackendType() {
+            const url = new URL(window.location.href);
+            const backendParam = url.searchParams.get('backend');
+            const saved = localStorage.getItem('BACKEND_TYPE');
+
+            if (backendParam === 'fastapi-local' || backendParam === 'fastapi-remote') {
+                return backendParam;
+            }
+            if (saved === 'fastapi-local' || saved === 'fastapi-remote') {
+                return saved;
+            }
+
+            return window.location.hostname === 'localhost' ? 'fastapi-local' : 'fastapi-remote';
+        }
+
+        // Create client like frontend does
+        const backendType = getBackendType();
+        const fastapi = backendType === 'fastapi-local'
+            ? createFastAPIClient('http://localhost:8000')
+            : createFastAPIClient('https://nany.datavertex.me');
+
+        function displayResult(elementId, result, title) {
+            const element = document.getElementById(elementId);
+            const className = result.error ? 'result error' : 'result success';
+            element.className = className;
+
+            if (result.error) {
+                element.textContent = `❌ ${title} ПОМИЛКА:\n${result.error.message}`;
+            } else {
+                element.textContent = `✅ ${title} УСПІХ:\n${JSON.stringify(result.data, null, 2)}`;
+            }
+        }
+
+        async function testBackendConfig() {
+            const result = {
+                backendType: backendType,
+                baseUrl: backendType === 'fastapi-local' ? 'http://localhost:8000' : 'https://nany.datavertex.me',
+                localStorage_BACKEND_TYPE: localStorage.getItem('BACKEND_TYPE'),
+                currentURL: window.location.href,
+                searchParams: new URL(window.location.href).searchParams.get('backend')
+            };
+            displayResult('backend-config-result', { data: result }, 'Backend конфігурація');
+        }
+
+        async function testCategories() {
+            const result = await fastapi.request('GET', '/api/v1/reference/categories?is_active=true');
+            displayResult('categories-result', result, 'Категорії довідників');
+        }
+
+        async function testOsvitaValues() {
+            const result = await fastapi.request('GET', '/api/v1/reference/values/osvita?is_active=true');
+            displayResult('osvita-result', result, 'Значення для освіти');
+        }
+
+        async function testDosvitValues() {
+            const result = await fastapi.request('GET', '/api/v1/reference/values/dosvid-roboty?is_active=true');
+            displayResult('dosvid-result', result, 'Значення для досвіду роботи');
+        }
+
+        async function testFrontendWay() {
+            try {
+                // Як frontend завантажує довідники
+                const categoriesResult = await fastapi.request('GET', '/api/v1/reference/categories?is_active=true');
+
+                if (categoriesResult.error) {
+                    throw new Error(categoriesResult.error.message);
+                }
+
+                const allValues = [];
+                const categoriesData = categoriesResult.data;
+
+                // Завантажуємо значення для кожної категорії
+                for (const category of categoriesData) {
+                    const valuesResult = await fastapi.request('GET', `/api/v1/reference/values/${category.code}?is_active=true`);
+                    if (!valuesResult.error && valuesResult.data) {
+                        allValues.push({
+                            categoryCode: category.code,
+                            categoryName: category.name,
+                            values: valuesResult.data
+                        });
+                    }
+                }
+
+                displayResult('frontend-result', { data: allValues }, 'Frontend симуляція');
+            } catch (error) {
+                displayResult('frontend-result', { error: { message: error.message } }, 'Frontend симуляція');
+            }
+        }
+
+        async function testOnboardingFields() {
+            const result = await fastapi.request('GET', '/api/v1/onboarding_fields');
+
+            if (result.data) {
+                // Фільтруємо тільки поля з reference_category_code
+                const referenceFields = result.data.filter(field => field.reference_category_code);
+                result.data = referenceFields;
+            }
+
+            displayResult('fields-result', result, 'Поля онбордингу з довідниками');
+        }
+
+        // Автоматично показуємо конфігурацію
+        window.onload = () => {
+            testBackendConfig();
+        };
+    </script>
+
+    <div class="section">
+        <h3>💡 Інструкції</h3>
+        <p><strong>Щоб переключити на продакшн backend:</strong></p>
+        <p>Додайте <code>?backend=fastapi-remote</code> до URL</p>
+        <p>Наприклад: <code>file:///path/to/test-onboarding-api.html?backend=fastapi-remote</code></p>
+    </div>
+</body>
+
+</html>

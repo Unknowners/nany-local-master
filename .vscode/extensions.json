@@ -1,0 +1,48 @@
+{
+    "recommendations": [
+        // Python Development
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.flake8",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        // FastAPI & API Development
+        "ms-python.autopep8",
+        "humao.rest-client",
+        "rangav.vscode-thunder-client",
+        // JavaScript/TypeScript/React
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "ms-vscode.vscode-typescript-next",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        // Docker & Containers
+        "ms-azuretools.vscode-docker",
+        "ms-vscode-remote.remote-containers",
+        // Database
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        "cweijan.vscode-postgresql-client2",
+        // Git & Version Control
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        // Markdown & Documentation
+        "yzhang.markdown-all-in-one",
+        "davidanson.vscode-markdownlint",
+        "bierner.markdown-mermaid",
+        // General Development
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "ms-vscode.hexeditor",
+        "streetsidesoftware.code-spell-checker",
+        "gruntfuggly.todo-tree",
+        // AI & Code Assistance
+        "github.copilot",
+        "github.copilot-chat",
+        // Utilities
+        "alefragnani.bookmarks",
+        "ms-vscode.live-server",
+        "formulahendry.code-runner"
+    ]
+}

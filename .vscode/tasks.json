@@ -1,0 +1,117 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🚀 Restart All Services",
+            "type": "shell",
+            "command": "./restart-all.sh",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🐳 Docker Status",
+            "type": "shell",
+            "command": "docker ps --format 'table {{.Names}}\\t{{.Status}}\\t{{.Ports}}'",
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "🏥 Health Check",
+            "type": "shell",
+            "command": "curl -s http://localhost:8000/health | jq .",
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "📊 Backend Logs",
+            "type": "shell",
+            "command": "docker logs -f nanny-match-backend-dev",
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new"
+            },
+            "isBackground": true
+        },
+        {
+            "label": "🗄️ Database Migrations",
+            "type": "shell",
+            "command": "cd nanny-match-backend && source venv/bin/activate && alembic upgrade head",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "📦 Install Backend Dependencies",
+            "type": "shell",
+            "command": "cd nanny-match-backend && source venv/bin/activate && pip install -r requirements.txt",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "📦 Install Frontend Dependencies",
+            "type": "shell",
+            "command": "cd nanny-match-ukraine && npm install",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "🧹 Clean Docker",
+            "type": "shell",
+            "command": "docker system prune -f && docker volume prune -f",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "🔍 Test All Services",
+            "type": "shell",
+            "command": "echo '🔍 Testing Backend...' && curl -s http://localhost:8000/health && echo '\\n✅ Backend OK' && echo '🔍 Testing Frontend...' && curl -s http://localhost:8080 > /dev/null && echo '✅ Frontend OK' && echo '🔍 Testing Database...' && docker exec nanny-match-postgres-dev pg_isready -U app && echo '✅ All services healthy!'",
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        }
+    ]
+}
