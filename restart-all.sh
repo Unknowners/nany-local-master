@@ -5,9 +5,9 @@ echo "========================================="
 echo "   Nanny Match Smart Restart"
 echo "========================================="
 
-# Ініціалізуємо NVM глобально для всього скрипта
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+# Ініціалізуємо NVM тільки коли потрібно (в функціях frontend)
+# export NVM_DIR="$HOME/.nvm"
+# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
 # Функція для очищення всіх процесів та контейнерів
 cleanup_all() {
@@ -21,8 +21,9 @@ cleanup_all() {
     pkill -f "python.*uvicorn" 2>/dev/null || true
     
     # Примусово очищуємо порти
-    lsof -ti :8080 | xargs kill -9 2>/dev/null || true
-    lsof -ti :8000 | xargs kill -9 2>/dev/null || true
+    lsof -ti :8080 | xargs kill -9 2>/dev/null || true  # Користувацький frontend
+    lsof -ti :8081 | xargs kill -9 2>/dev/null || true  # Адмін frontend
+    lsof -ti :8000 | xargs kill -9 2>/dev/null || true  # Backend
     
     # Зупиняємо Docker контейнери
     cd nanny-match-backend
@@ -77,12 +78,17 @@ start_local_backend() {
     cd ..
 }
 
-# Функція для запуску frontend
-start_frontend() {
+# Функція для запуску користувацького frontend
+start_user_frontend() {
     local backend_url=$1
     
     echo ""
-    echo "🌐 Запуск Frontend..."
+    echo "🌐 Запуск користувацького Frontend..."
+    
+    # Ініціалізуємо NVM для цієї функції
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh" --no-use
+    
     cd nanny-match-ukraine
     
     # Перевіряємо чи встановлений npm
@@ -97,30 +103,86 @@ start_frontend() {
     
     # Встановлюємо залежності якщо потрібно
     if [ ! -d "node_modules" ]; then
-        echo "📦 Встановлення залежностей frontend..."
+        echo "📦 Встановлення залежностей користувацького frontend..."
         npm install
     fi
     
     # Встановлюємо змінну для backend URL
     if [ "$backend_url" = "cloud" ]; then
         export VITE_API_URL="https://nany.datavertex.me"
-        echo "🌐 Frontend налаштовано на хмарний backend"
+        echo "🌐 Користувацький frontend налаштовано на хмарний backend"
     else
         export VITE_API_URL="http://localhost:8000"
-        echo "🏠 Frontend налаштовано на локальний backend"
+        echo "🏠 Користувацький frontend налаштовано на локальний backend"
     fi
     
-    # Запускаємо frontend
+    # Запускаємо користувацький frontend
     npm run dev -- --port 8080 --host 0.0.0.0 &
-    FRONTEND_PID=$!
+    USER_FRONTEND_PID=$!
     
     cd ..
     
-    # Чекаємо готовність frontend
-    echo "⏳ Очікування готовності frontend..."
+    # Чекаємо готовність користувацького frontend
+    echo "⏳ Очікування готовності користувацького frontend..."
     for i in {1..10}; do
         if curl -s http://localhost:8080 > /dev/null 2>&1; then
-            echo "✅ Frontend готовий!"
+            echo "✅ Користувацький frontend готовий!"
+            break
+        fi
+        echo "   Спроба $i/10..."
+        sleep 2
+    done
+}
+
+# Функція для запуску адмін frontend
+start_admin_frontend() {
+    local backend_url=$1
+    
+    echo ""
+    echo "👑 Запуск адмін Frontend..."
+    
+    # Ініціалізуємо NVM для цієї функції
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh" --no-use
+    
+    cd nanny-match-ukraine-adminfront
+    
+    # Перевіряємо чи встановлений npm
+    if ! command -v npm &> /dev/null; then
+        echo "❌ npm не встановлений! Встановіть Node.js:"
+        echo "   https://nodejs.org/ або brew install node"
+        echo "   або через NVM: nvm install --lts"
+        return 1
+    fi
+    
+    echo "✅ Node.js $(node --version) та npm $(npm --version) доступні"
+    
+    # Встановлюємо залежності якщо потрібно
+    if [ ! -d "node_modules" ]; then
+        echo "📦 Встановлення залежностей адмін frontend..."
+        npm install
+    fi
+    
+    # Встановлюємо змінну для backend URL
+    if [ "$backend_url" = "cloud" ]; then
+        export VITE_API_URL="https://nany.datavertex.me"
+        echo "🌐 Адмін frontend налаштовано на хмарний backend"
+    else
+        export VITE_API_URL="http://localhost:8000"
+        echo "🏠 Адмін frontend налаштовано на локальний backend"
+    fi
+    
+    # Запускаємо адмін frontend
+    npm run dev -- --port 8081 --host 0.0.0.0 &
+    ADMIN_FRONTEND_PID=$!
+    
+    cd ..
+    
+    # Чекаємо готовність адмін frontend
+    echo "⏳ Очікування готовності адмін frontend..."
+    for i in {1..10}; do
+        if curl -s http://localhost:8081 > /dev/null 2>&1; then
+            echo "✅ Адмін frontend готовий!"
             break
         fi
         echo "   Спроба $i/10..."
@@ -145,11 +207,13 @@ show_final_status() {
         echo "   API Docs: http://localhost:8000/docs"
     fi
     
-    echo "   Frontend: http://localhost:8080"
+    echo "   Користувацький Frontend: http://localhost:8080"
+    echo "   Адмін Frontend: http://localhost:8081"
     echo ""
     echo "📌 Налаштування:"
     echo "   Backend: $backend_type"
-    echo "   Frontend: Локальний на порту 8080"
+    echo "   Користувацький Frontend: Локальний на порту 8080"
+    echo "   Адмін Frontend: Локальний на порту 8081"
     
     if [ "$backend_type" = "local" ]; then
         echo "   База даних: PostgreSQL (Docker)"
@@ -167,8 +231,12 @@ cleanup_on_exit() {
     echo ""
     echo "🧹 Зупинка сервісів..."
     
-    if [ ! -z "$FRONTEND_PID" ]; then
-        kill $FRONTEND_PID 2>/dev/null || true
+    if [ ! -z "$USER_FRONTEND_PID" ]; then
+        kill $USER_FRONTEND_PID 2>/dev/null || true
+    fi
+    
+    if [ ! -z "$ADMIN_FRONTEND_PID" ]; then
+        kill $ADMIN_FRONTEND_PID 2>/dev/null || true
     fi
     
     if [ "$BACKEND_TYPE" = "local" ]; then
@@ -215,26 +283,30 @@ case $choice in
         echo "🏠 Запуск з локальним backend..."
         BACKEND_TYPE="local"
         start_local_backend
-        start_frontend "local"
+        start_user_frontend "local"
+        start_admin_frontend "local"
         ;;
     2)
         if [ $CLOUD_AVAILABLE -eq 0 ]; then
             echo ""
             echo "🌐 Використання хмарного backend..."
             BACKEND_TYPE="cloud"
-            start_frontend "cloud"
+            start_user_frontend "cloud"
+            start_admin_frontend "cloud"
         else
             echo "❌ Хмарний backend недоступний, перемикаємося на локальний"
             BACKEND_TYPE="local"
             start_local_backend
-            start_frontend "local"
+            start_user_frontend "local"
+        start_admin_frontend "local"
         fi
         ;;
     *)
         echo "❌ Невірний вибір, використовуємо локальний backend"
         BACKEND_TYPE="local"
         start_local_backend
-        start_frontend "local"
+        start_user_frontend "local"
+        start_admin_frontend "local"
         ;;
 esac
 
@@ -243,9 +315,9 @@ show_final_status $BACKEND_TYPE
 
 # Крок 5: Очікуємо
 if [ "$BACKEND_TYPE" = "local" ]; then
-    # Для локального backend очікуємо і frontend і backend контейнери
+    # Для локального backend очікуємо backend контейнери та обидва frontend
     wait
 else
-    # Для хмарного backend очікуємо тільки frontend
-    wait $FRONTEND_PID
+    # Для хмарного backend очікуємо тільки обидва frontend
+    wait $USER_FRONTEND_PID $ADMIN_FRONTEND_PID
 fi
