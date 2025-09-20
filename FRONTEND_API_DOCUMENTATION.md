@@ -187,39 +187,43 @@ POST /api/v1/swipes/create
 }
 ```
 
-### Отримання моїх лайків:
+### Отримання моїх лайків (з інформацією про матчі):
 ```javascript
-GET /api/v1/swipes/my-likes?limit=100
+GET /api/v1/simple/my-likes?limit=100
 // Відповідь:
 {
   "likes": [{
-    "id": "uuid",
-    "from_user_id": "uuid",
-    "to_user_id": "uuid", 
-    "swipe": "like",
-    "created_at": "2025-01-01T00:00:00Z"
+    "swipe_id": "uuid",
+    "target_user_id": "uuid-user",
+    "swiped_at": "2025-01-01T00:00:00Z",
+    "first_name": "Марія",
+    "last_name": "Іванова",
+    "role": "nanny",
+    "is_mutual": true  // ⭐ true = матч, false = тільки мій лайк
   }],
-  "total": 5
+  "total": 5,
+  "has_more": false
 }
 ```
 
----
-
-## 🤝 **МАТЧІ**
-
-### Отримання матчів:
+### Фільтрація результатів у фронтенді:
 ```javascript
-GET /api/v1/matches
-// Відповідь: взаємні лайки (коли обидва лайкнули)
-{
-  "matches": [/* масив матчів */],
-  "total": 3
-}
-```
+const response = await fastapi.request('GET', '/api/v1/simple/my-likes');
 
-### Видалення матчу:
-```javascript
-DELETE /api/v1/matches/{match_id}
+// Всі лайки
+const allLikes = response.likes;
+
+// Тільки матчі (взаємні лайки)
+const matches = allLikes.filter(like => like.is_mutual === true);
+
+// Тільки мої лайки (без взаємності)
+const oneWayLikes = allLikes.filter(like => like.is_mutual === false);
+
+// Лічильники
+const counters = {
+  saved_profiles: allLikes.length,
+  matches: matches.length
+};
 ```
 
 ---
